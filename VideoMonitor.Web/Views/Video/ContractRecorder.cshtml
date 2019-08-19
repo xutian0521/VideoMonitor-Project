@@ -1,0 +1,16 @@
+﻿
+@{
+    ViewBag.Title = "签约录制";
+    Layout = "~/Views/Shared/_VideoRecorder.cshtml";
+    ViewBag.RedirectUrl = "/video/ContractRecorder";
+    ViewBag.VideoType = 6;
+}
+
+
+
+@section header{
+    <script type="text/javascript">
+        setCookie("RedirectUrl", "/video/ContractRecorder")
+    </script>
+}
+

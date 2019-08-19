@@ -1,0 +1,127 @@
+﻿
+
+@{
+    ViewBag.Title = "Form";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var userId = $.request("userId");
+
+    $(function () {
+        initControl();
+
+        if (!!userId) {
+            $.ajax({
+                url: "/User/GetModifyJsonAsync?userId=" + userId,
+                data: { userId: userId },
+                dataType: "json",
+                async: false,
+                success: function (data) {
+                    $("#form1").formSerialize(data);
+                    $("#F_UserPassword").val("******").attr('disabled', 'disabled');
+                }
+            });
+        }
+    });
+    function initControl() {
+        $("#Gender").bindSelect()
+        //var userId = getCookie("userId");
+        $("#RoleId").bindSelect({
+            url: "/Role/GetRoleJsonListAsync",
+            id: "Id",
+            text: "RoleName"
+        });
+
+    }
+
+    function submitForm() {
+        if (!$('#form1').formValid()) {
+            return false;
+        }
+        var param_ = $("#form1").formSerialize();
+        if (param_.Id) {
+            console.log(userId);
+            $.submitForm({
+                url: "/User/EditAsync",
+                param: $("#form1").formSerialize(),
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        }
+        else {
+            var userId = getCookie("userId");
+            console.log(userId);
+            $.submitForm({
+                url: "/User/EditAsync?ParentId=" + userId,
+                param: $("#form1").formSerialize(),
+                success: function () {
+                    $.currentWindow().$("#gridList").trigger("reloadGrid");
+                }
+            });
+        }
+
+    }
+</script>
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#">基本信息</a></li>
+            @*<li ><a href="#">扩展信息</a></li>*@
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">账户</th>
+                    <td class="formValue">
+                        <input type="hidden" id="Id" name="Id" value="" />
+                        <input id="UserName" name="UserName" type="text" class="form-control required" placeholder="请输入账户" />
+                    </td>
+                    <th class="formTitle">密码</th>
+                    <td class="formValue">
+                        <input id="PassWord" name="PassWord" type="password" class="form-control required" placeholder="请输入密码" />
+                    </td>
+                </tr>
+
+                <tr>
+                    <th class="formTitle">角色</th>
+                    <td class="formValue">
+                        <select id="RoleId" name="RoleId" class="form-control required">
+                            <option value="">==请选择==</option>
+                        </select>
+                    </td>
+                    <th class="formTitle">公司</th>
+                    <td class="formValue">
+                        <input id="CompanyName" name="CompanyName" type="text" class="form-control required" placeholder="公司名字" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">姓名</th>
+                    <td class="formValue">
+                        <input id="RealName" name="RealName" type="text" class="form-control" placeholder="请输入姓名" />
+                    </td>
+                    <th class="formTitle">手机</th>
+                    <td class="formValue">
+                        <input id="Phone" name="Phone" type="text" class="form-control" />
+                    </td>
+                </tr>
+
+
+
+                <tr>
+                    <th class="formTitle" valign="top" style="padding-top: 5px;">
+                        备注
+                    </th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="Remark" name="Remark" class="form-control" style="height: 60px;"></textarea>
+                        @*<input type="hidden" id="ParentId" name="ParentId" value="" />*@
+                    </td>
+
+                </tr>
+            </table>
+        </div>
+    </div>
+</form>
+
+
+

@@ -1,0 +1,18 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_VideoRecorder.cshtml";
+    ViewBag.Title = "监装录制";
+    ViewBag.VideoType = 4;
+    ViewBag.RedirectUrl = "/video/MonitorRecorder";
+}
+
+@section header{
+    <script type="text/javascript">
+        setCookie("RedirectUrl", "/video/MonitorRecorder")
+    </script>
+    }
+
+    <label  style="font-size:1.4rem;line-height:.5rem" class="label label-info">箱号</label>
+    <input  style="border-radius:.3rem;height:2.8rem;font-size:1.6rem;width:50%;margin-top:.4rem" type="text" id="boxNum" name="boxNum" value="" />
+
+

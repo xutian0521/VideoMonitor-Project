@@ -1,0 +1,237 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>WebRTC Video Recording using MediaStreamRecorder</title>
+
+    <script src="libs/MediaStreamRecorder.js"></script>
+
+    <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
+    <script src="libs/gumadapter.js"></script>
+    <link href="../bootstrap/css/bootstrap.css" rel="stylesheet" />
+    <!--<script src="../common/jquery-1.10.2.js"></script>
+    <script src="../bootstrap/js/bootstrap.js"></script>-->
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <style type="text/css">
+        header {
+            width: 100%;
+            height: 40px;
+            background-color: rgb(60, 72, 61);
+        }
+            header button {
+                display: block;
+                float: right;
+                margin-top: 0.5%;
+                margin-bottom: 0.5%;
+            }
+    </style>
+</head>
+
+<body>
+        <header >
+            <button type="button" class="btn btn-default">
+                <span class="glyphicon glyphicon-user" aria-hidden="true"></span> 个人信息
+            </button>
+        </header>
+
+        <div class="github-stargazers"></div>
+
+        <section class="experiment" style="padding: 5px;">
+
+            <button id="start-recording" class="btn btn-success">开始录制</button>
+
+            <button id="pause-recording" class="btn btn-primary" disabled>暂停</button>
+            <button id="resume-recording" class="btn btn-info" disabled>继续</button>
+
+            <button id="stop-recording" class="btn btn-warning" disabled>停止</button>
+            <button id="save-recording" class="btn btn-danger" disabled>上传</button>
+
+        </section>
+
+        <section class="experiment" >
+            <div id="videos-container" >
+                <video controls="controls" style="width:100%;height:48rem">
+
+                </video>
+            </div>
+        </section>
+
+        <script>
+            function captureUserMedia(mediaConstraints, successCallback, errorCallback) {
+                navigator.mediaDevices.getUserMedia(mediaConstraints).then(successCallback).catch(errorCallback);
+            }
+            var viedoblob_;
+            var mediaConstraints = {
+                audio: !IsOpera && !IsEdge, // record both audio/video in Firefox/Chrome
+                video: true
+            };
+
+            document.querySelector('#start-recording').onclick = function() {
+                this.disabled = true;
+                captureUserMedia(mediaConstraints, onMediaSuccess, onMediaError);
+            };
+
+            document.querySelector('#stop-recording').onclick = function() {
+                this.disabled = true;
+                mediaRecorder.resume();
+                mediaRecorder.stop();
+                mediaRecorder.stream.stop();
+
+                document.querySelector('#pause-recording').disabled = true;
+                document.querySelector('#start-recording').disabled = false;
+            };
+
+            document.querySelector('#pause-recording').onclick = function() {
+                this.disabled = true;
+                mediaRecorder.pause();
+
+                document.querySelector('#resume-recording').disabled = false;
+            };
+
+            document.querySelector('#resume-recording').onclick = function() {
+                this.disabled = true;
+                mediaRecorder.resume();
+
+                document.querySelector('#pause-recording').disabled = false;
+            };
+
+            document.querySelector('#save-recording').onclick = function() {
+                this.disabled = true;
+                //mediaRecorder.save();
+                uploadToDotNetServer(viedoblob_);
+                // alert('Drop WebM file on Chrome or Firefox. Both can play entire file. VLC player or other players may not work.');
+            };
+
+            var mediaRecorder;
+
+            function onMediaSuccess(stream) {
+                var video = document.createElement('video');
+                alert("width:" + screen.width + ",height:" +screen.height);
+                var videoWidth = screen.width ||350;
+                var videoHeight = screen.height -200||500;
+
+                video = mergeProps(video, {
+                    controls: true,
+                    muted: true,
+                    width: videoWidth,
+                    height: videoHeight,
+                    src: URL.createObjectURL(stream)
+                });
+                video.play();
+                videosContainer.innerText = "";
+                videosContainer.appendChild(video);
+                videosContainer.appendChild(document.createElement('hr'));
+
+                mediaRecorder = new MediaStreamRecorder(stream);
+                mediaRecorder.stream = stream;
+
+                //var recorderType = document.getElementById('video-recorderType').value;
+                recorderType ="Best Available Recorder"
+                if (recorderType === 'MediaRecorder API') {
+                    mediaRecorder.recorderType = MediaRecorderWrapper;
+                }
+
+                if (recorderType === 'WebP encoding into WebM') {
+                    mediaRecorder.recorderType = WhammyRecorder;
+                }
+
+                // don't force any mimeType; use above "recorderType" instead.
+                // mediaRecorder.mimeType = 'video/webm'; // video/webm or video/mp4
+
+
+                mediaRecorder.videoWidth = videoWidth;
+                mediaRecorder.videoHeight = videoHeight;
+                mediaRecorder.ondataavailable = function(blob) {
+                    var a = document.createElement('a');
+                    a.target = '_blank';
+                    a.innerHTML = 'Open Recorded Video No. ' + (index++) + ' (Size: ' + bytesToSize(blob.size) + ') Time Length: ' + 0;
+
+                    a.href = URL.createObjectURL(blob);
+
+                    videosContainer.appendChild(a);
+                    videosContainer.appendChild(document.createElement('hr'));
+                    //uploadToDotNetServer(blob);
+                    viedoblob_ = blob;
+                };
+
+                //var timeInterval = document.querySelector('#time-interval').value;
+                //if (timeInterval) timeInterval = parseInt(timeInterval);
+                //else timeInterval = 5 * 1000;
+
+                //get blob after specific time interval
+                //mediaRecorder.start(timeInterval);
+                mediaRecorder.start();
+
+                document.querySelector('#stop-recording').disabled = false;
+                document.querySelector('#pause-recording').disabled = false;
+                document.querySelector('#save-recording').disabled = false;
+            }
+
+            function onMediaError(e) {
+                console.error('media error', e);
+            }
+
+            var videosContainer = document.getElementById('videos-container');
+            var index = 1;
+
+            // below function via: http://goo.gl/B3ae8c
+            function bytesToSize(bytes) {
+                var k = 1000;
+                var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                if (bytes === 0) return '0 Bytes';
+                var i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)), 10);
+                return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
+            }
+
+            // below function via: http://goo.gl/6QNDcI
+            function getTimeLength(milliseconds) {
+                var data = new Date(milliseconds);
+                return data.getUTCHours() + " hours, " + data.getUTCMinutes() + " minutes and " + data.getUTCSeconds() + " second(s)";
+            }
+
+            window.onbeforeunload = function() {
+                document.querySelector('#start-recording').disabled = false;
+            };
+
+            //--------------关键代码----上次视频
+
+            function uploadToDotNetServer(blob) {
+                var file = new File([blob], 'msr-' + (new Date).toISOString().replace(/:|\./g, '-') + '.webm', {
+                    type: 'video/webm'
+                });
+
+                // create FormData
+                var formData = new FormData();
+                formData.append('video-filename', file.name);
+                formData.append('video-blob', file);
+
+                makeXMLHttpRequest('/video/UploadVideoAsync?type=1&boxNum=', formData, function () {
+                    var downloadURL = '/UploadFile/Video' + file.name;
+                    console.log('File uploaded to this path:', downloadURL);
+                });
+            }
+
+            function makeXMLHttpRequest(url, data, callback) {
+                var request = new XMLHttpRequest();
+                request.onreadystatechange = function () {
+                    if (request.readyState == 4 && request.status == 200) {
+                        callback();
+                    }
+                };
+                request.open('POST', url);
+                request.send(data);
+            }
+        </script>
+
+
+    <footer>
+        <p>
+        </p>
+    </footer>
+</body>
+
+</html>

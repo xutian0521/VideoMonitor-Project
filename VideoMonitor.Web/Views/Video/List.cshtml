@@ -1,0 +1,137 @@
+﻿@using VideoMonitor.Entities.Enums
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_List.cshtml";
+    int videoType = (int)ViewBag.VideoType;
+}
+
+<script>
+    $(function () {
+        gridList();
+    })
+    var videoType_= @videoType;
+    function gridList() {
+        var $gridList = $("#gridList");
+        //var userId = getCookie("userId");
+        $gridList.dataGrid({
+            url: "/video/GetVideoPagedListJsonAsync?type=" + videoType_,
+            height: $(window).height() - 96,
+            colModel: [
+                { label: "ID", name: "Id", hidden: true, key: true },
+                { label: '类别', name: 'SubType', width: 80, align: 'left' },
+                {
+                    label: '路径', name: 'Path', width: 350, align: 'left', formatter: function (Path) {
+                        return '<a target="_self" style="color:blue" href="../' + Path + '">' + Path + '</a>';
+                    }
+                },
+
+                @if(videoType == (int)VideoType.Monitor)
+                {
+                    <text>{ label: '箱号', name: 'BoxNum', width: 100, align: 'left' },</text>
+                }
+                { label: '用户', name: 'UserName', width: 80, align: 'left' },
+
+                { label: '角色', name: 'RoleName', width: 80, align: 'left' },
+                { label: '归属业务员', name: 'Salesman', width: 80, align: 'left' },
+
+                { label: '公司', name: 'CompanyName', width: 80, align: 'left' },
+                { label: '联系方式', name: 'Phone', width: 80, align: 'left' },
+                {
+                    label: '创建时间', name: 'CreateTime', width: 80, align: 'left',
+                    formatter: "date", formatoptions: { srcformat: 'Y-m-d', newformat: 'Y-m-d' }
+                },
+                { label: '所在地', name: 'Location', width: 230, align: 'left' },
+            ],
+            rowNum: 20,
+            pager: "#gridPager",
+            rowList: [20, 30, 40],
+            jsonReader: {
+                root: "Data", page: "PageIndex", rows: "PageSize", total: "PageCount",
+                records: "Total"
+            },
+            prmNames: {
+
+                page: "PageIndex", rows: "PageSize", total: "PageCount",        //   很重要 定义了 后台分页参数的名字。
+                records: "Total", repeatitems: false, id: "id"
+            },
+            viewrecords: true
+        });
+        $("#btn_search").click(function () {
+            //alert($("#txt_keyword").val());
+            $gridList.jqGrid("setGridParam",{
+                postData: { keyWords: $("#txt_keyword").val(),type: @videoType },
+            }).trigger('reloadGrid');
+        });
+    }
+    function btn_delete() {
+        var Id_ = $("#gridList").jqGridRowValue().Id;
+        $.deleteForm({
+            url: "/Video/DeleteAsync?Id=" + Id_,
+            success: function () {
+                $.currentWindow().$("#gridList").trigger("reloadGrid");
+            }
+        })
+    }
+    function btn_details() {
+        var Id_ = $("#gridList").jqGridRowValue().Id;
+        $.modalOpen({
+            id: "Details",
+            title: "查看视频",
+            url: "/Video/Watch?id=" + Id_,
+            width: "600px",
+            height: "850px",
+            btn: null,
+        });
+    }
+
+    function btn_map() {
+        var Id_ = $("#gridList").jqGridRowValue().Id;
+        $.modalOpen({
+            id: "Details",
+            title: "查看地图",
+            url: "/Video/Map?id=" + Id_,
+            width: "650px",
+            height: "560px",
+            btn: null,
+        });
+    }
+</script>
+
+<div class="topPanel">
+    <div class="toolbar">
+        <div class="btn-group">
+            <a class="btn btn-primary" onclick="$.reload()"><span class="glyphicon glyphicon-refresh"></span></a>
+        </div>
+        <div class="btn-group">
+            <a id="NF-add" authorize="yes" class="btn btn-primary dropdown-text" onclick="btn_add()"><i class="fa fa-plus"></i>新建</a>
+        </div>
+        <div class="operate">
+            <ul class="nav nav-pills">
+                <li class="first">已选中<span>1</span>项</li>
+                <li><a  authorize="yes" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>修改</a></li>
+                <li><a  authorize="yes" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a></li>
+                <li><a  authorize="yes" onclick="btn_details()"><i class="fa fa-search-plus"></i>查看</a></li>
+                <li><a  authorize="yes" onclick="btn_map()"><i class="fa fa-search-plus"></i>查看地图</a></li>
+            </ul>
+            <a href="javascript:;" class="close"></a>
+        </div>
+    </div>
+    <div class="search">
+        <table>
+            <tr>
+                <td>
+                    <div class="input-group">
+                        <input id="txt_keyword" type="text" class="form-control" placeholder="账号/姓名/手机/公司" style="width: 200px;">
+                        <span class="input-group-btn">
+                            <button id="btn_search" type="button" class="btn  btn-primary"><i class="fa fa-search"></i></button>
+                        </span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridList"></table>
+    <div id="gridPager"></div>
+</div>

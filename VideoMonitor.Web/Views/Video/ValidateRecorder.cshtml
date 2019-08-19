@@ -1,0 +1,13 @@
+﻿
+@{
+    Layout = "~/Views/Shared/_VideoRecorder.cshtml";
+    ViewBag.Title = "验厂录制";
+    ViewBag.VideoType = 5;
+    ViewBag.RedirectUrl = "/video/ValidateRecorder";
+}
+
+@section header{
+    <script type="text/javascript">
+        setCookie("RedirectUrl", "/video/ValidateRecorder")
+    </script>
+}

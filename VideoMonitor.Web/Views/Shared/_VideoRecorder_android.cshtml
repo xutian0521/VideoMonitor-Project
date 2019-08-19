@@ -1,0 +1,415 @@
+﻿
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>@ViewBag.Title</title>
+
+    <script src="~/Content/mobile/MediaStreamRecorder.js"></script>
+
+    <!-- for Edige/FF/Chrome/Opera/etc. getUserMedia support -->
+    <script src="~/Content/mobile/gumadapter.js"></script>
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <script src="~/Scripts/jquery-1.10.2.min.js"></script>
+    <script src="~/Scripts/bootstrap.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <script type="text/javascript">
+        //JS操作cookies方法!
+        //写cookies
+        function setCookie(name, value) {
+            document.cookie = name + "=" + escape(value) + "; path=/";
+        }
+    </script>
+    @RenderSection("header")
+    <style type="text/css">
+        header {
+            width: 100%;
+            height: 40px;
+            background-color: rgb(60, 72, 61);
+        }
+
+        header button {
+            display: block;
+            float: right;
+            /*margin-top: 0.5%;
+            margin-bottom: 0.5%;*/
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <form class="form-inline" action="/" method="post">
+            <div class="form-group" style="padding-top:.2rem">
+                @RenderBody()
+                <div class="btn-group" style="float:right">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        更&nbsp&nbsp&nbsp&nbsp&nbsp多 <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="/user/info">个人信息</a></li>
+                        <li><a href="/video/ValidateRecorder">验厂</a></li>
+                        <li><a href="/video/MonitorRecorder">监装</a></li>
+                    </ul>
+                </div>
+            </div>
+
+        </form>
+
+
+    </header>
+
+    <div class="github-stargazers"></div>
+
+    <section class="experiment" style="padding: 5px;">
+
+        <button id="start-recording" class="btn btn-success">开始录制</button>
+
+        <button id="pause-recording" class="btn btn-primary" disabled>暂停</button>
+        <button id="resume-recording" class="btn btn-info" disabled>继续</button>
+
+        <button id="stop-recording" class="btn btn-warning" disabled>停止</button>
+        <button id="save-recording" class="btn btn-danger" disabled>上传</button>
+
+    </section>
+
+    <section class="progressSection hidden">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                <span class="sr-only"></span>
+            </div>
+
+
+        </div>
+        <div class="alert alert-danger" role="alert">视频正在上传，请勿进行其他操作！</div>
+    </section>
+    <section>
+        
+        <div class="alert alert-info hidden" role="alert">
+            <p></p>
+            <span id="mytime">00:00:00</span>
+        </div>
+        <div class="alert alert-success hidden" role="alert"></div>
+
+    </section>
+        <section class="experiment">
+            <div id="videos-container">
+                <video style="width:100%;height:40rem"></video>
+            </div>
+        </section>
+    <section>
+        <!-- 模态框（Modal） -->
+        <div style="width: 300px;margin: 30px auto;" class="modal fade bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            提示
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+    </section>
+    <script>
+
+        var sec_;
+        var interval_;
+        function two_char(n) {
+            return n >= 10 ? n : "0" + n;
+        }
+        function time_Start() {
+            var sec = 0;
+            interval_= setInterval(function () {
+                sec++;
+                var date = new Date(0, 0)
+                date.setSeconds(sec);
+                var h = date.getHours(), m = date.getMinutes(), s = date.getSeconds();
+                sec_ = two_char(s);
+                document.getElementById("mytime").innerText = two_char(h) + ":" + two_char(m) + ":" + two_char(s);
+            }, 1000);
+        }
+        function time_Pause() {
+            clearTimeout(interval_);
+            var date = new Date(0, 0)
+            date.setSeconds(sec_);
+            var h = date.getHours(), m = date.getMinutes(), s = date.getSeconds();
+            document.getElementById("mytime").innerText = two_char(h) + ":" + two_char(m) + ":" + two_char(s);
+        }
+
+        function time_Resume(sec) {
+
+            var sec = sec;
+            interval_= setInterval(function () {
+                sec++;
+                var date = new Date(0, 0)
+                date.setSeconds(sec);
+                var h = date.getHours(), m = date.getMinutes(), s = date.getSeconds();
+                sec_ = two_char(s);
+                document.getElementById("mytime").innerText = two_char(h) + ":" + two_char(m) + ":" + two_char(s);
+            }, 1000);
+        }
+
+        function captureUserMedia(mediaConstraints, successCallback, errorCallback) {
+            navigator.mediaDevices.getUserMedia(mediaConstraints).then(successCallback).catch(errorCallback);
+        }
+        var viedoblob_;
+        var mediaConstraints = {
+            audio: !IsOpera && !IsEdge, // record both audio/video in Firefox/Chrome
+            video: true,
+        }
+
+        document.querySelector('#start-recording').onclick = function () {
+            $.get("/user/CheckUserInfoIsIntactAsync", function (res) {
+                if (res == false) {
+                    msgBox("请完善个人信息！");
+                }
+                else {
+                    this.disabled = true;
+                    captureUserMedia(mediaConstraints, onMediaSuccess, onMediaError);
+                    $('.alert-info').removeClass('hidden');
+                    $('.alert-info p').text('正在录制...');
+                    time_Start();
+                }
+            });
+        };
+
+        document.querySelector('#stop-recording').onclick = function () {
+            this.disabled = true;
+
+            mediaRecorder.stop();
+            //mediaRecorder.stream.stop();
+            $('.alert-info p').text('已停止...');
+            document.querySelector('#pause-recording').disabled = true;
+            document.querySelector('#start-recording').disabled = false;
+            document.querySelector('#save-recording').disabled = false;
+            time_Pause();
+        };
+
+        document.querySelector('#pause-recording').onclick = function () {
+            this.disabled = true;
+            mediaRecorder.pause();
+            $('.alert-info p').text('已暂停...');
+            document.querySelector('#resume-recording').disabled = false;
+            document.querySelector('#stop-recording').disabled = true;
+            time_Pause();
+        };
+
+        document.querySelector('#resume-recording').onclick = function () {
+            this.disabled = true;
+            mediaRecorder.resume();
+            $('.alert-info p').text('正在录制...');
+            document.querySelector('#pause-recording').disabled = false;
+            document.querySelector('#stop-recording').disabled = false;
+            time_Resume(sec_);
+            
+        };
+
+        document.querySelector('#save-recording').onclick = function () {
+            if (document.querySelector('#boxNum') != undefined) {
+                var boxNum_ = document.querySelector('#boxNum').value;
+                $.get("/com/CheckBoxNumIsRight?boxNum=" + boxNum_, function (res) {
+                    if (!res) {
+                        msgBox("请输入正确箱号");
+                        return;
+                    }
+                    else {
+                        this.disabled = true;
+                        uploadToDotNetServer(viedoblob_);
+                    }
+                });
+            }
+            else {
+                this.disabled = true;
+                //mediaRecorder.save();
+                uploadToDotNetServer(viedoblob_);
+                // alert('Drop WebM file on Chrome or Firefox. Both can play entire file. VLC player or other players may not work.');
+            }
+
+        };
+
+        var mediaRecorder;
+
+        function onMediaSuccess(stream) {
+            var video = document.createElement('video');
+            console.log("width:" + screen.width + ",height:" + screen.height);
+            alert("width:" + screen.width + ",height:" + screen.height);
+            //var videoWidth = screen.width || 350;
+            //var videoHeight = screen.height - 200 || 500;
+            var videoWidth = 36;
+            var videoHeight =64;
+
+            video = mergeProps(video, {
+                controls: false,
+                muted: true,
+                width: videoWidth,
+                height: videoHeight,
+                src: URL.createObjectURL(stream)
+            });
+            video.play();
+            videosContainer.innerText = "";
+            videosContainer.appendChild(video);
+            videosContainer.appendChild(document.createElement('hr'));
+
+            mediaRecorder = new MediaStreamRecorder(stream);
+            mediaRecorder.stream = stream;
+
+            //var recorderType = document.getElementById('video-recorderType').value;
+            recorderType = "Best Available Recorder"
+            if (recorderType === 'MediaRecorder API') {
+                mediaRecorder.recorderType = MediaRecorderWrapper;
+            }
+
+            if (recorderType === 'WebP encoding into WebM') {
+                mediaRecorder.recorderType = WhammyRecorder;
+            }
+
+            // don't force any mimeType; use above "recorderType" instead.
+            // mediaRecorder.mimeType = 'video/webm'; // video/webm or video/mp4
+
+
+            mediaRecorder.videoWidth = videoWidth;
+            mediaRecorder.videoHeight = videoHeight;
+            mediaRecorder.ondataavailable = function (blob) {
+
+                var res = '录制视频 -- 编号. ' + (index++) + ' (大小: ' + bytesToSize(blob.size) + ') 时长: ' + $('#mytime').text();
+
+                AppendRow(res);//测试用
+                //uploadToDotNetServer(blob);
+                viedoblob_ = blob;
+            };
+
+            //var timeInterval = document.querySelector('#time-interval').value;
+            //if (timeInterval) timeInterval = parseInt(timeInterval);
+            //else timeInterval = 5 * 1000;
+
+            //get blob after specific time interval
+            //mediaRecorder.start(timeInterval);
+            mediaRecorder.start();
+
+            document.querySelector('#stop-recording').disabled = false;
+            document.querySelector('#pause-recording').disabled = false;
+            //document.querySelector('#save-recording').disabled = false;
+        }
+
+        function onMediaError(e) {
+            console.error('media error', e);
+        }
+
+        var videosContainer = document.getElementById('videos-container');
+        var index = 1;
+
+        // below function via: http://goo.gl/B3ae8c
+        function bytesToSize(bytes) {
+            var k = 1000;
+            var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            if (bytes === 0) return '0 Bytes';
+            var i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)), 10);
+            return (bytes / Math.pow(k, i)).toPrecision(3) + ' ' + sizes[i];
+        }
+
+        // below function via: http://goo.gl/6QNDcI
+        function getTimeLength(milliseconds) {
+            var data = new Date(milliseconds);
+            return data.getUTCHours() + " hours, " + data.getUTCMinutes() + " minutes and " + data.getUTCSeconds() + " second(s)";
+        }
+
+        window.onbeforeunload = function () {
+            document.querySelector('#start-recording').disabled = false;
+        };
+
+        //--------------关键代码----上次视频
+        function uploadToDotNetServer(blob) {
+            var file = new File([blob], 'msr-' + (new Date).toISOString().replace(/:|\./g, '-') + '.webm', {
+                type: 'video/webm'
+            });
+
+            // create FormData
+            var formData = new FormData();
+            formData.append('video-filename', file.name);
+            formData.append('video-blob', file);
+            var boxNum_;
+            if (document.querySelector('#boxNum') != undefined)
+            {
+                boxNum_ = document.querySelector('#boxNum').value;
+            }
+
+            makeXMLHttpRequest('/video/UploadVideoAsync?type=' + @ViewBag.VideoType +'&boxNum=' + boxNum_, formData, function (res) {
+                console.log(res);
+                alert(res);
+                AppendRow(res);//测试用
+                msgBox("上传完成！", true)
+                
+
+            });
+        }
+
+        function makeXMLHttpRequest(url, data, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                $('#videos-container').hide();
+                if (request.readyState == 4 && request.status == 200) {
+                    var res = request.responseText;
+                    callback(res);
+                }
+            };
+
+            request.upload.onprogress = function (progress) {
+                if (progress.lengthComputable) {
+                    var num_ = progress.loaded / progress.total * 100;
+                    console.log(num_);
+                    $('.progressSection').removeClass('hidden')
+
+                    $('.progress .progress-bar').css('width', num_ + '%');
+                    $('.progress .progress-bar .sr-only').text(num_ + '%')
+                }
+            };
+            request.upload.onloadstart = function () {
+                console.log('started...');
+            };
+            request.open('POST', url);
+            request.send(data);
+        }
+
+        function AppendRow(res) {
+            var a = document.createElement('a');
+            a.target = '_blank';
+            a.innerHTML = res;
+            var logPanel = document.querySelector('.alert-success')
+            $('.alert-success').removeClass('hidden');
+            logPanel.appendChild(a);
+            //logPanel.appendChild(document.createElement('hr'));
+        }
+        function msgBox(msg, isreload) {
+
+            $('.modal-body').text(msg);
+            $('.modal').modal('show');
+            Interval_= setInterval(function () {
+                $('.modal').modal('hide');
+                if (isreload) {
+                    location.reload();
+                }
+            }, 2000);
+        }
+        </script>
+
+
+        <footer>
+
+            
+
+        </footer>
+</body>
+
+</html>
+
+

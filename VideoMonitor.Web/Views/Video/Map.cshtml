@@ -1,0 +1,23 @@
+﻿@model VideoMonitor.Entities.ViewModel.MapInfo
+@{
+    ViewBag.Title = "Map";
+    Layout = null;
+}
+<script src="~/Content/js/jquery/jquery-2.1.1.min.js"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=A4BeW8fh7eQvAsUwn5IGwzd0grc89KyQ"></script>   
+<div id="allmap" style="height:500px;width:600px;margin-top:5px;margin-left:5px;"></div>
+<script type="text/javascript">
+    // 百度地图API功能
+    var map = new BMap.Map("allmap");
+    var point = new BMap.Point(@Model.Lng, @Model.Lat);
+    map.centerAndZoom(point, 14);
+
+    var mk = new BMap.Marker(point);
+    var label = new BMap.Label("@Model.Location", { offset: new BMap.Size(20, -10) });
+    mk.setLabel(label);
+    map.enableScrollWheelZoom(true);
+
+    map.addOverlay(mk);
+
+    map.panTo(point);
+</script>

@@ -1,0 +1,15 @@
+﻿
+@{
+    ViewBag.Title = "验货录制";
+    Layout = "~/Views/Shared/_VideoRecorder.cshtml";
+    ViewBag.RedirectUrl = "/video/InspectGoodsRecorder";
+    ViewBag.VideoType = 7;
+}
+
+
+
+@section header{
+    <script type="text/javascript">
+        setCookie("RedirectUrl", "/video/InspectGoodsRecorder")
+    </script>
+}

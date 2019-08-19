@@ -1,0 +1,20 @@
+﻿@using VideoMonitor.Entities.Models;
+@{
+    ViewBag.Title = "Watch";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+@model Video
+<form id="form1">
+    <div style="margin-top: 10px; margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#">@Model.Name</a></li>
+            @*<li ><a href="#">扩展信息</a></li>*@
+        </ul>
+        <div style="padding-top: 20px; margin-right: 30px;">
+            <video controls="controls" src="../@Model.Path">
+
+            </video>
+        </div>
+    </div>
+</form>
+

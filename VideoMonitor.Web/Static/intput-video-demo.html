@@ -1,0 +1,184 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+    <title>upload</title>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <link href="../Content/bootstrap.css" rel="stylesheet" />
+    <script src="../Scripts/jquery-1.10.2.js"></script>
+    <script src="../Scripts/bootstrap.js"></script>
+    <style type="text/css">
+        #save-recording{
+            margin-top:2rem;
+            margin-left:41%
+        }
+        .experiment {
+            margin-top: 5rem;
+        }
+        #mask_layer {
+            top: 0px;
+            left: 0px;
+            position: fixed;
+            height: 100%;
+            width: 100%;
+            background-color: #808080;
+            opacity: 0.7;
+            z-index: 8;
+        }
+        .loading{
+            top:45%;
+            left:30%;
+            position:fixed;
+            z-index:9;
+        }
+        .toops {
+            top: 50%;
+            left: 31%;
+            position: fixed;
+            z-index: 9;
+            font-size:15px;
+            color:white;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="progressSection hidden">
+        <div class="progress">
+            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
+                <span class="sr-only"></span>
+            </div>
+
+
+        </div>
+        <div class="alert alert-danger" role="alert">视频正在上传，请勿进行其他操作！</div>
+    </section>
+    <section class="experiment" style="padding: 5px;">
+        <div class="form-group">
+            <input type="file" class="form-control" accept="video/*" name="file_head" id="file_head" value="请选择视频录制" />
+            <button id="save-recording" class="btn btn-danger">上传</button>
+        </div>
+
+
+
+
+    </section>
+    <div id="maskBox" style="display:none">
+        <div id="mask_layer" class="">
+            
+        </div>
+        <img class="loading" src="../Content/img/loading-progress.gif" />
+        <div class="toops">正在上传，请稍等...</div>
+    </div>
+    <section>
+        <!-- 模态框（Modal） -->
+        <div style="width: 300px;margin: 30px auto;" class="modal fade bs-example-modal-sm" id="myModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            提示
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+    </section>
+    <script type="text/javascript">
+        function msgBox(msg, isreload) {
+            $('.modal-body').text(msg);
+            $('.modal').modal('show');
+            setInterval(function () {
+                $('.modal').modal('hide');
+                if (isreload) {
+                    location.reload();
+                }
+            }, 2000);
+        }
+        function makeXMLHttpRequest(url, data, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                $('#videos-container').hide();
+                if (request.readyState == 4 && request.status == 200) {
+                    var res = request.responseText;
+                    callback(res);
+                }
+            };
+
+            request.upload.onprogress = function (progress) {
+                alert("progress");
+                if (progress.lengthComputable) {
+                    var num_ = progress.loaded / progress.total * 100;
+                    console.log(num_);
+                    $('.progressSection').removeClass('hidden')
+
+                    $('.progress .progress-bar').css('width', num_ + '%');
+                    $('.progress .progress-bar .sr-only').text(num_ + '%')
+                }
+            };
+            request.upload.onloadstart = function () {
+                console.log('started...');
+            };
+            request.open('POST', url);
+            request.send(data);
+        }
+        function uploadToDotNetServer(blob) {
+            
+            // create FormData
+            var formData = new FormData();
+            formData.append('video-filename', blob.name);
+            formData.append('video-blob', blob);
+            alert(blob.name);
+
+            makeXMLHttpRequest('/video/UploadVideoAsync?type=' + @ViewBag.VideoType +'&boxNum=' + boxNum_, formData, function () {
+                var downloadURL = '/UploadFile/Video' + blob.name;
+
+                console.log('File uploaded to this path:', downloadURL);
+                $("#maskBox").hide();
+                AppendRow(res);//测试用
+                msgBox("上传完成！");
+            });
+        }
+
+        function makeXMLHttpRequest(url, data, callback) {
+            var request = new XMLHttpRequest();
+            request.onreadystatechange = function () {
+                if (request.readyState == 4 && request.status == 200) {
+                    callback();
+                }
+            };
+            request.open('POST', url);
+            request.send(data);
+        }
+
+        $(function () {
+            $("#save-recording").click(function () {
+                var file_ = document.getElementById("file_head").files[0];
+                if (file_) {
+
+                    if (file_.name.indexOf("trim") > -1) {
+                        alert('请使用录制的视频！');
+                        return;
+                    }
+
+                    $("#maskBox").show();
+                    uploadToDotNetServer(file_);
+                }
+                else {
+                    alert("请先录制视频！");
+                }
+
+            });
+        });
+    </script>
+</body>
+</html> 

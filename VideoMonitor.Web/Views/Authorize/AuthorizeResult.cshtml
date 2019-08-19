@@ -1,0 +1,45 @@
+﻿@model VideoMonitor.Entities.ViewModel.AuthorizeResultVM
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>授权结果</title>
+    <link href="~/Content/bootstrap.css" rel="stylesheet" />
+    <style type="text/css">
+        h4, .alert, .back {
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <h4>授权结果</h4>
+        <hr />
+
+        @if (Model.isAuthorizeSuccess)
+        {
+            <div class="alert alert-success">授权成功！</div>
+            <div class="alert alert-info">授权截止日期为@(Model.AuthorizeDeadline) </div>
+        }
+        else
+        {
+
+            <div class="alert alert-warning">授权失败！请检查你的授权码！</div>
+        }
+
+
+        
+    </div>
+    <p>
+        <div class="back"><a href="/home/index">返回首页</a>|
+            <a href="/Authorize/Register">返回授权</a></div>
+    </p>
+</body>
+</html>
