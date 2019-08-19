@@ -25,7 +25,6 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TargetFrameworkProfile />
-
     <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -410,7 +409,7 @@
     <Content Include="Static\apps\libs\style.css" />
     <Content Include="Static\apps\MultiStreamRecorder.html" />
     <Content Include="Static\apps\opentok-stream-recorder.html" />
-    <Content Include="Static\apps\testnew.html" />
+    <Content Include="Static\apps\input-video-raw.html" />
     <Content Include="Static\apps\video-recorder.html" />
     <Content Include="Static\bootstrap\css\bootstrap-theme.css" />
     <Content Include="Static\bootstrap\css\bootstrap-theme.min.css" />
@@ -440,7 +439,7 @@
     <Content Include="Static\FileSystem\FileReader.js" />
     <Content Include="Static\FileSystem\FileWriter.js" />
     <Content Include="Static\Gruntfile.js" />
-    <Content Include="Static\testnew.html" />
+    <Content Include="Static\intput-video-demo.html" />
     <Content Include="Static\lib\AjaxRequest\AjaxRequest.js" />
     <Content Include="Static\MediaStreamRecorder.js" />
     <Content Include="Static\MediaStreamRecorder.min.js" />
